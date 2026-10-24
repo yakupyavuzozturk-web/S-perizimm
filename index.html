@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sana Küçük Bir Sürpriz</title>
+
+<style>
+:root {
+  --cream: #fff8eb;
+  --black: #292929;
+  --blue: #83b8e8;
+  --light-blue: #e5f2ff;
+  --white: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--black);
+  font-family: Georgia, "Times New Roman", serif;
+  text-align: center;
+  min-height: 100vh;
+}
+
+button, input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.screen {
+  display: none;
+  min-height: 100vh;
+  padding: 35px 18px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.screen.active {
+  display: flex;
+}
+
+h1 {
+  font-size: clamp(28px, 7vw, 42px);
+  font-weight: normal;
+}
+
+p {
+  line-height: 1.8;
+}
+
+button {
+  background: var(--black);
+  color: var(--white);
+  border: none;
+  border-radius: 25px;
+  padding: 13px 23px;
+  margin: 8px;
+  transition: transform .2s, background .2s;
+}
+
+button:hover {
+  background: #426f9c;
+  transform: translateY(-2px);
+}
+
+input {
+  width: min(280px, 90%);
+  padding: 14px;
+  border: 1px solid var(--blue);
+  border-radius: 12px;
+  background: white;
+  margin: 12px;
+  text-align: center;
+}
+
+.stars {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.star {
+  position: absolute;
+  color: var(--blue);
+  opacity: .65;
+  animation: float 5s ease-in-out infinite alternate;
+}
+
+@keyframes float {
+  from { transform: translateY(0) rotate(0deg); }
+  to { transform: translateY(-24px) rotate(25deg); }
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 600px;
+}
+
+.eyebrow {
+  letter-spacing: 3px;
+  font-size: 12px;
+  color: #547fa8;
+  text-transform: uppercase;
+}
+
+.boxes {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
+  width: 100%;
+  max-width: 350px;
+  margin-top: 20px;
+}
+
+.gift {
+  background: var(--white);
+  color: var(--black);
+  border: 1px solid #d7e7f5;
+  border-radius: 18px;
+  padding: 22px 15px;
+  box-shadow: 0 5px 18px #00000008;
+}
+
+.gift span {
+  display: block;
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.gift small {
+  color: #666;
+}
+
+.message {
+  background: white;
+  border-radius: 18px;
+  padding: 22px;
+  margin-top: 20px;
+  line-height: 1.9;
+  text-align: left;
+  white-space: pre-wrap;
+}
+
+.photos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.photos img {
+  width: 100%;
+  border-radius: 12px;
+  object-fit: cover;
+  aspect-ratio: 3 / 4;
+  background: var(--light-blue);
+}
+
+#musicPlayer {
+  width: 100%;
+  margin-top: 18px;
+}
+
+.envelope {
+  font-size: 85px;
+  animation: envelopeFloat 2s ease-in-out infinite alternate;
+}
+
+@keyframes envelopeFloat {
+  from { transform: translateY(0); }
+  to { transform: translateY(-9px); }
+}
+
+.letter {
+  width: 100%;
+  max-width: 500px;
+  background: white;
+  border-radius: 8px;
+  padding: 25px 20px;
+  box-shadow: 0 8px 25px #0000000d;
+  line-height: 1.9;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  animation: appear 1.2s ease;
+}
+
+@keyframes appear {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hint {
+  font-size: 13px;
+  color: #777;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@media (min-width: 600px) {
+  .boxes {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .gift {
+    padding: 20px 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="stars" id="stars"></div>
+
+<!-- ==================================
+     AYARLAR: KENDİ İÇERİĞİNİ BURADAN DEĞİŞTİR
+     ================================== -->
+
+<script>
+const AYARLAR = {
+
+  // Kendi şifreni buraya yaz.
+  sifre: "mavi2026",
+
+  // Karşılama ekranı
+  baslik: "Senin için küçük bir sürprizim var",
+  altYazi: "Bazen birkaç küçük şey, çok şey anlatır.",
+  baslaButonu: "Sürprizime bakalım",
+
+  // Birinci kutu: FOTOĞRAFLAR
+  fotografBasligi: "Küçük Anılarımız",
+  fotografAciklamasi: "Bazı anlar saklamaya değer.",
+
+  // Fotoğrafları daha sonra yükleyebilirsin.
+  // Dosya adlarını yüklediğin fotoğraflarla eşleştir.
+  fotograflar: [
+    "foto1.jpg",
+    "foto2.jpg"
+  ],
+
+  // İkinci kutu: NOT
+  notBasligi: "Sana Bir Not",
+  not: `Bazen söylemek istediklerimi kelimelere
+dökmek kolay olmuyor.
+
+Ama senin bilmeni istediğim güzel şeyler var.
+Buraya kendi notunu yazabilirsin. ❤️`,
+
+  // Üçüncü kutu: MÜZİK
+  muzikBasligi: "Bizim Şarkımız",
+  muzikAciklamasi: "Bu şarkı sana bir şeyler hatırlatsın.",
+
+  // Buraya doğrudan bir MP3 veya ses dosyası bağlantısı ekle.
+  // Şimdilik boş bırakabilirsin.
+  muzikURL: "",
+
+  // Üç kutu da açıldıktan sonra görünen son mesaj
+  finalBasligi: "Bir şey daha var...",
+
+  // Son mektup: Bu metni dilediğin gibi değiştir.
+  mektup: `Bunu okuyan güzel insana,
+
+Bazen birine anlatmak istediğin çok şey olur.
+Ben de sana birkaç küçük sürpriz hazırlamak istedim.
+
+Buraya kendi duygularını, anılarını ve
+ona söylemek istediğin her şeyi yazabilirsin.
+
+İyi ki hayatımdasın. ❤️
+
+Sevgiyle...`
+
+};
+
+// ==================================
+// SİTENİN ÇALIŞMASI
+// BU BÖLÜMÜ DEĞİŞTİRMEN GEREKMİYOR.
+// ==================================
+
+const $ = id => document.getElementById(id);
+
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(screen => {
+    screen.classList.remove("active");
+  });
+
+  $(id).classList.add("active");
+  window.scrollTo(0, 0);
+}
+
+function createStars() {
+  const container = $("stars");
+
+  for (let i = 0; i < 24; i++) {
+    const star = document.createElement("span");
+    star.className = "star";
+    star.textContent = "✦";
+    star.style.left = Math.random() * 100 + "%";
+    star.style.top = Math.random() * 100 + "%";
+    star.style.fontSize = (10 + Math.random() * 17) + "px";
+    star.style.animationDelay = Math.random() * 4 + "s";
+    container.appendChild(star);
+  }
+}
+
+function prepareSite() {
+  $("welcomeTitle").textContent = AYARLAR.baslik;
+  $("welcomeText").textContent = AYARLAR.altYazi;
+  $("startButton").textContent = AYARLAR.baslaButonu;
+
+  $("photoTitle").textContent = AYARLAR.fotografBasligi;
+  $("photoText").textContent = AYARLAR.fotografAciklamasi;
+
+  $("noteTitle").textContent = AYARLAR.notBasligi;
+  $("musicTitle").textContent = AYARLAR.muzikBasligi;
+  $("musicText").textContent = AYARLAR.muzikAciklamasi;
+
+  $("finalTitle").textContent = AYARLAR.finalBasligi;
+
+  const gallery = $("gallery");
+
+  AYARLAR.fotograflar.forEach((file, index) => {
+    const img = document.createElement("img");
+    img.src = file;
+    img.alt = "Anımız " + (index + 1);
+    img.loading = "lazy";
+
+    img.onerror = () => {
+      img.alt = "Fotoğraf henüz eklenmedi";
+      img.style.display = "none";
+    };
+
+    gallery.appendChild(img);
+  });
+
+  if (AYARLAR.muzikURL.trim()) {
+    const player = $("musicPlayer");
+    player.src = AYARLAR.muzikURL;
+    player.classList.remove("hidden");
+  }
+
+  $("noteContent").textContent = AYARLAR.not;
+}
+
+function checkPassword() {
+  const entered = $("password").value;
+
+  if (entered === AYARLAR.sifre) {
+    $("passwordError").textContent = "";
+    $("password").value = "";
+    showScreen("surprises");
+  } else {
+    $("passwordError").textContent =
+      "Bu şifre olmadı, bir daha deneyelim. ✨";
+  }
+}
+
+const opened = new Set();
+
+function openGift(type) {
+  opened.add(type);
+
+  if (type === "photos") {
+    $("photoPanel").classList.remove("hidden");
+    $("photoButton").textContent = "✓ Fotoğraflar açıldı";
+  }
+
+  if (type === "note") {
+    $("notePanel").classList.remove("hidden");
+    $("noteButton").textContent = "✓ Not açıldı";
+  }
+
+  if (type === "music") {
+    $("musicPanel").classList.remove("hidden");
+    $("musicButton").textContent = "✓ Müzik açıldı";
+  }
+
+  if (opened.size === 3) {
+    $("finalInvitation").classList.remove("hidden");
+  }
+}
+
+function openLetter() {
+  showScreen("letterScreen");
+
+  const letter = $("letterText");
+  const text = AYARLAR.mektup;
+
+  letter.textContent = "";
+  let index = 0;
+
+  if (window.typingTimer) {
+    clearInterval(window.typingTimer);
+  }
+
+  window.typingTimer = setInterval(() => {
+    letter.textContent += text.charAt(index);
+    index++;
+
+    if (index >= text.length) {
+      clearInterval(window.typingTimer);
+    }
+  }, 55);
+}
+
+createStars();
+prepareSite();
+</script>
+
+<!-- 1. KARŞILAMA -->
+
+<section class="screen active" id="welcome">
+  <div class="content">
+    <p class="eyebrow">Sadece sana özel</p>
+    <h1 id="welcomeTitle"></h1>
+    <p id="welcomeText"></p>
+    <p style="font-size:30px">✦ ✧ ✦</p>
+    <button id="startButton" onclick="showScreen('passwordScreen')">
+    </button>
+    <p class="hint">Küçük bir yolculuğa hazır mısın?</p>
+  </div>
+</section>
+
+<!-- 2. ŞİFRE -->
+
+<section class="screen" id="passwordScreen">
+  <div class="content">
+    <p style="font-size:35px">🔐</p>
+    <h1>Küçük bir sır...</h1>
+    <p>Bu sürprizin şifresini biliyor musun?</p>
+
+    <form onsubmit="event.preventDefault(); checkPassword();">
+      <input
+        id="password"
+        type="password"
+        placeholder="Şifreyi buraya yaz"
+        autocomplete="off"
+        required
+      >
+      <br>
+      <button type="submit">Devam et ✨</button>
+    </form>
+
+    <p id="passwordError" role="status"></p>
+  </div>
+</section>
+
+<!-- 3. ÜÇ SÜRPRİZ KUTUSU -->
+
+<section class="screen" id="surprises">
+  <div class="content">
+    <p class="eyebrow">Birer birer keşfet</p>
+    <h1>Senin için hazırladıklarım</h1>
+    <p>Her kutuda küçük bir sürpriz var.</p>
+
+    <div class="boxes">
+
+      <button class="gift" id="photoButton"
+        onclick="openGift('photos')">
+        <span>📷</span>
+        Fotoğraflar
+        <small>Birlikte anılar</small>
+      </button>
+
+      <button class="gift" id="noteButton"
+        onclick="openGift('note')">
+        <span>💌</span>
+        Bir not
+        <small>Sana söylemek istediklerim</small>
+      </button>
+
+      <button class="gift" id="musicButton"
+        onclick="openGift('music')">
+        <span>🎵</span>
+        Müzik
+        <small>Bizim şarkımız</small>
+      </button>
+
+    </div>
+
+    <div class="message hidden" id="photoPanel">
+      <h2 id="photoTitle"></h2>
+      <p id="photoText"></p>
+      <div class="photos" id="gallery"></div>
+      <p class="hint">Yeni fotoğraflar ekleyerek bu bölümü büyütebilirsin.</p>
+    </div>
+
+    <div class="message hidden" id="notePanel">
+      <h2 id="noteTitle"></h2>
+      <div id="noteContent"></div>
+    </div>
+
+    <div class="message hidden" id="musicPanel">
+      <h2 id="musicTitle"></h2>
+      <p id="musicText"></p>
+
+      <audio id="musicPlayer" class="hidden"
+        controls preload="none">
+        Tarayıcın ses oynatmayı desteklemiyor.
+      </audio>
+
+      <p class="hint">
+        Müzik bağlantısı eklenince burada oynatılabilir.
+      </p>
+    </div>
+
+    <div id="finalInvitation" class="hidden">
+      <p style="font-size:30px;margin-top:35px">💌</p>
+      <h2>Hepsi bu kadar değil...</h2>
+      <p>Senin için son bir şey daha hazırladım.</p>
+      <button onclick="openLetter()">Son sürprizi aç</button>
+    </div>
+  </div>
+</section>
+
+<!-- 4. MEKTUP -->
+
+<section class="screen" id="letterScreen">
+  <div class="content">
+    <p class="eyebrow">Son bir şey</p>
+    <h1 id="finalTitle"></h1>
+
+    <div class="envelope">💌</div>
+
+    <p>Senin için yazdığım birkaç satır...</p>
+
+    <div class="letter" id="letterText"></div>
+
+    <p style="margin-top:25px">✦ Her zaman güzel anılar biriktirmek dileğiyle ✦</p>
+
+    <button onclick="showScreen('surprises')">
+      Sürprizlere geri dön
+    </button>
+  </div>
+</section>
+
+</body>
+</html>
